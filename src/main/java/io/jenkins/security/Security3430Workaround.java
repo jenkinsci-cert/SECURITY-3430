@@ -79,7 +79,7 @@ public class Security3430Workaround implements ClassFileTransformer {
                     continue OUTER;
                 }
                 if (j == needle.length - 1) {
-                    return innerReplace(classfileBuffer, i + j);
+                    return innerReplace(classfileBuffer, i);
                 }
             }
         }
@@ -89,7 +89,7 @@ public class Security3430Workaround implements ClassFileTransformer {
 
     private static byte[] innerReplace(byte[] classfileBuffer, int offset) {
         final byte[] output = Arrays.copyOf(classfileBuffer, classfileBuffer.length);
-        output[offset] = 'm'; // fetchJar -> fetchJam :-)
+        output[offset] = 'r'; // fetchJar -> retchJar :-)
         return output;
     }
 
