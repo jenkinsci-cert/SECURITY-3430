@@ -106,12 +106,14 @@ public class Security3430Workaround implements ClassFileTransformer {
             System.err.println("Additionally, this file can be used as an executable jar to patch a RemoteClassLoader$ClassLoaderProxy.class file.");
             System.err.println("Usage:");
             System.err.println("    java -jar /path/to/security3430-workaround.jar <source> <target>");
+            System.exit(1);
             return;
         }
         final byte[] original = Files.readAllBytes(new File(args[0]).toPath());
         final byte[] modified = innerTransform(original);
         if (modified == null) {
             System.err.println("Failed to transform the specified file. Is it a RemoteClassLoader$ClassLoaderProxy.class?");
+            System.exit(1);
             return;
         }
         Files.write(new File(args[1]).toPath(), modified);
