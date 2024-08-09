@@ -25,7 +25,6 @@
                 <version>3.4.2</version>
                 <configuration>
                     <archive>
-                        <index>true</index>
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>io.jenkins.security.Security3430Workaround</mainClass>
@@ -44,6 +43,7 @@
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
             <version>4.8.6</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
