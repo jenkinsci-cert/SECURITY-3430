@@ -9,7 +9,7 @@
 
     <groupId>io.jenkins.security</groupId>
     <artifactId>security3430-workaround</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -20,7 +20,7 @@
     <scm>
         <connection>scm:git:https://github.com/${githubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${githubRepo}.git</developerConnection>
-        <tag>security3430-workaround-1.0</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/${githubRepo}</url>
     </scm>
 
