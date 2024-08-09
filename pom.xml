@@ -16,7 +16,16 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <githubRepo>jenkinsci-cert/SECURITY-3430</githubRepo>
     </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/${githubRepo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${githubRepo}.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/${githubRepo}</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
