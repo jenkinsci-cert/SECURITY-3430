@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci</groupId>
@@ -11,7 +9,7 @@
 
     <groupId>io.jenkins.security</groupId>
     <artifactId>security3430-workaround</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -22,7 +20,7 @@
     <scm>
         <connection>scm:git:https://github.com/${githubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${githubRepo}.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>security3430-workaround-1.0</tag>
         <url>https://github.com/${githubRepo}</url>
     </scm>
 
