@@ -24,6 +24,7 @@
 
 package io.jenkins.security;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -39,6 +40,7 @@ import java.util.logging.Logger;
 public class Security3430Workaround implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(Security3430Workaround.class.getName());
 
+    @SuppressFBWarnings(value = "DM_EXIT", justification = "Failure to transform might result in unsafe state, so shutting down is intentional")
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
         if (!className.equals("hudson/remoting/RemoteClassLoader$ClassLoaderProxy")) {
@@ -98,6 +100,7 @@ public class Security3430Workaround implements ClassFileTransformer {
         instrumentation.addTransformer(new Security3430Workaround());
     }
 
+    @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "DM_EXIT"}, justification = "CLI behavior")
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             System.err.println("This file is a Java agent addressing SECURITY-3430/CVE-2024-43044 in older releases of Jenkins by patching bytecode.");
