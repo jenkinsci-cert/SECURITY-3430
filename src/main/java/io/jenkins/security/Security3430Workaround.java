@@ -72,7 +72,7 @@ public class Security3430Workaround implements ClassFileTransformer {
         return null;
     }
 
-    private static byte[] innerTransform(byte[] classfileBuffer) {
+    static byte[] innerTransform(byte[] classfileBuffer) {
         byte[] needle = "fetchJar".getBytes(StandardCharsets.US_ASCII);
 
         OUTER: for (int i = 0; i <= classfileBuffer.length - needle.length; i++) {
