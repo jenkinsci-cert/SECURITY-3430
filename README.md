@@ -2,8 +2,16 @@
 
 This is a Java agent for use with Jenkins controllers that do not have the fix for [SECURITY-3430](https://www.jenkins.io/security/advisory/2024-08-07/#SECURITY-3430) (i.e., up to and including 2.470 and LTS 2.452.3).
 
+## Mechanism and Compatibility
+
 It transforms the definition of the class containing the SECURITY-3430 vulnerability to prevent exploitation.
-If that fails for some reason, Jenkins is forcibly stopped.
+If that fails for some reason, **Jenkins is forcibly stopped**.
+
+This workaround will completely block `ClassLoaderProxy#fetchJar` and is therefore incompatible with the affected functionality of the plugins mentioned in the [security advisory](https://www.jenkins.io/security/advisory/2024-08-07/), unlike the regular fix.
+
+This workaround has been tested successfully with several recent releases of Jenkins from the last few years.
+
+WARNING: Due to how this workaround works, we strongly recommend that you regularly take backups of Jenkins, and deploy the workaround progressively.
 
 ## Usage
 
