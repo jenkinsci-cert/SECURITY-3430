@@ -76,7 +76,7 @@ public class Security3430Workaround implements ClassFileTransformer {
         return null;
     }
 
-    private static byte[] innerTransform(byte[] classfileBuffer) {
+    static byte[] innerTransform(byte[] classfileBuffer) {
         try {
             final int offset = findMethodNameInConstantPool(classfileBuffer);
             return innerReplace(classfileBuffer, offset);
