@@ -35,7 +35,7 @@ public class CompatibilityTest {
     }
 
     private static File getRemotingDirectory() throws URISyntaxException {
-        return new File(Objects.requireNonNull(CompatibilityTest.class.getResource("/old-remoting/remoting-4.0.jar")).toURI().getPath()).getParentFile();
+        return new File(Objects.requireNonNull(CompatibilityTest.class.getResource("/old-remoting/remoting-4.0.jar")).toURI()).getParentFile();
     }
 
     private static byte[] readClassfileFromRemoting(ZipFile zipFile) throws IOException {
