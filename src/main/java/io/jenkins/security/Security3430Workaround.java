@@ -25,12 +25,15 @@
 package io.jenkins.security;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
@@ -39,6 +42,7 @@ import java.util.logging.Logger;
 
 public class Security3430Workaround implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(Security3430Workaround.class.getName());
+    public static final String METHOD_NAME = "fetchJar";
 
     @SuppressFBWarnings(value = "DM_EXIT", justification = "Failure to transform might result in unsafe state, so shutting down is intentional")
     @Override
@@ -61,7 +65,7 @@ public class Security3430Workaround implements ClassFileTransformer {
             return transformed;
         }
 
-        LOGGER.log(Level.SEVERE, () -> "SECURITY-3430 Workaround: Failed to find the 'fetchJar' in the class file, cannot prevent exploitation.");
+        LOGGER.log(Level.SEVERE, () -> "SECURITY-3430 Workaround: Failed to find the '" + METHOD_NAME + "' in the class file, cannot prevent exploitation.");
         final String skipShutdownPropertyName = Security3430Workaround.class.getName() + ".SKIP_SHUTDOWN";
         if (Boolean.getBoolean(skipShutdownPropertyName)) {
             LOGGER.log(Level.SEVERE, () -> "SECURITY-3430 Workaround: Skipping shutdown because " + skipShutdownPropertyName + " is set. The instance is not protected from SECURITY-3430.");
@@ -73,20 +77,115 @@ public class Security3430Workaround implements ClassFileTransformer {
     }
 
     static byte[] innerTransform(byte[] classfileBuffer) {
-        byte[] needle = "fetchJar".getBytes(StandardCharsets.US_ASCII);
+        try {
+            final int offset = findMethodNameInConstantPool(classfileBuffer);
+            return innerReplace(classfileBuffer, offset);
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, ex, () -> "Failed to replace");
+            return null;
+        }
+    }
 
-        OUTER: for (int i = 0; i <= classfileBuffer.length - needle.length; i++) {
-            for (int j = 0; j < needle.length; j++) {
-                if (classfileBuffer[i+j] != needle[j]) {
-                    continue OUTER;
-                }
-                if (j == needle.length - 1) {
-                    return innerReplace(classfileBuffer, i);
+    private static int findMethodNameInConstantPool(byte[] classfileBuffer) {
+        final CountingInputStream counter = new CountingInputStream(new ByteArrayInputStream(classfileBuffer));
+        try (DataInputStream dis = new DataInputStream(counter)) {
+            final byte[] magic = dis.readNBytes(4);
+            if (!Arrays.equals(magic, new byte[] { (byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE })) {
+                throw new IllegalArgumentException("Not a class file");
+            }
+            final int version = dis.readInt();
+            if (version > 0x42) { // 66, Java 22
+                throw new IllegalArgumentException("Unsupported class file version: " + version);
+            }
+            final int constantPoolEntries = dis.readUnsignedShort();
+            int currentEntry = 1;
+            while (currentEntry < constantPoolEntries) {
+                final int tag = dis.readUnsignedByte();
+                final int offset = counter.getOffset();
+                // https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.4
+                // https://en.wikipedia.org/wiki/Java_class_file#The_constant_pool
+                switch (tag) {
+                    case 7:
+                    case 8:
+                    case 16:
+                    case 19:
+                    case 20:
+                        // 2 bytes
+                        dis.readShort();
+                        currentEntry++;
+                        continue;
+                    case 15:
+                        // 3 bytes
+                        dis.readShort();
+                        dis.readByte();
+                        currentEntry++;
+                        continue;
+                    case 3:
+                    case 4:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                    case 17:
+                    case 18:
+                        // 4 bytes
+                        dis.readInt();
+                        currentEntry++;
+                        continue;
+                    case 5:
+                    case 6:
+                        // 8 bytes
+                        dis.readInt();
+                        dis.readInt();
+                        currentEntry++;
+                        continue;
+                    case 1:
+                        // Variable length string in "modified UTF".
+                        // Per https://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8 class files use the same encoding.
+                        final String str = dis.readUTF();
+                        if (METHOD_NAME.equals(str)) {
+                            LOGGER.log(Level.FINE, () -> "Found string: " + str + " at offset: " + offset);
+                            return offset + 2; // add the length prefix, see #readUTF
+                        }
+                        currentEntry++;
+                        continue;
+                    default:
+                        throw new IllegalArgumentException("Unknown constant pool entry type: " + tag);
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        throw new IllegalArgumentException("Failed to find '" + METHOD_NAME + "' in constant pool");
+    }
+
+    private static class CountingInputStream extends FilterInputStream {
+        private int offset;
+        protected CountingInputStream(InputStream in) {
+            super(in);
         }
 
-        return null;
+        @Override
+        public int read() throws IOException {
+            offset++;
+            return super.read();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            offset += len;
+            return super.read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            offset += n;
+            return super.skip(n);
+        }
+
+        public int getOffset() {
+            return offset;
+        }
     }
 
     private static byte[] innerReplace(byte[] classfileBuffer, int offset) {
